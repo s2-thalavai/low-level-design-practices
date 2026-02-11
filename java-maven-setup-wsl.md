@@ -335,5 +335,7 @@ source ~/.bashrc
 
 <img width="1203" height="1020" alt="image" src="https://github.com/user-attachments/assets/fd25520a-eb11-4eb7-be6c-cebb61dfad7f" />
 
+<img width="1505" height="1018" alt="image" src="https://github.com/user-attachments/assets/11cdf958-2f79-46e0-bec9-165d825d8fc8" />
+
 ------------------------------------
 
