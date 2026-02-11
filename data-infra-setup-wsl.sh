@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================
-# Data Infrastructure Setup (WSL / Ubuntu)
+# Data Infrastructure Setup (WSL / Ubuntu 24.04)
 # Installs:
 # - PostgreSQL
 # - Redis
@@ -15,111 +15,124 @@ echo "Data Infrastructure Setup Started"
 echo "=================================================="
 
 # --------------------------------------------------
-# 1. Update system
+# 1. System Update
 # --------------------------------------------------
 sudo apt update -y
 
 # --------------------------------------------------
-# 2. Install PostgreSQL
+# 2. PostgreSQL
 # --------------------------------------------------
 echo "Installing PostgreSQL..."
 sudo apt install -y postgresql postgresql-contrib
 
-# Start PostgreSQL
 sudo systemctl enable postgresql || true
 sudo systemctl start postgresql || true
 
-# Create default user and database
-echo "Configuring PostgreSQL..."
+echo "Configuring PostgreSQL (dev/devdb)..."
+
 sudo -u postgres psql <<EOF
-CREATE USER dev WITH PASSWORD 'dev123';
-ALTER USER dev CREATEDB;
-CREATE DATABASE devdb OWNER dev;
+DO \$\$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'dev') THEN
+      CREATE ROLE dev LOGIN PASSWORD 'dev123';
+   END IF;
+END
+\$\$;
+
+DO \$\$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'devdb') THEN
+      CREATE DATABASE devdb OWNER dev;
+   END IF;
+END
+\$\$;
 EOF
 
-echo "PostgreSQL user: dev / dev123"
-echo "Database: devdb"
-
 # --------------------------------------------------
-# 3. Install Redis
+# 3. Redis
 # --------------------------------------------------
 echo "Installing Redis..."
 sudo apt install -y redis-server
 
-# Enable Redis
 sudo systemctl enable redis-server || true
 sudo systemctl start redis-server || true
 
-# Test Redis
+echo "Testing Redis..."
 redis-cli ping
 
 # --------------------------------------------------
-# 4. Install Kafka (KRaft mode)
+# 4. Kafka Installation
 # --------------------------------------------------
 echo "Installing Kafka..."
 
-KAFKA_VERSION="3.7.0"
+KAFKA_VERSION="3.7.1"
 SCALA_VERSION="2.13"
+FILE="kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz"
 
-cd /opt
-sudo wget https://downloads.apache.org/kafka/${KAFKA_VERSION}/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz
-sudo tar -xzf kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz
-sudo mv kafka_${SCALA_VERSION}-${KAFKA_VERSION} kafka
-sudo rm kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz
+cd /tmp
+
+DOWNLOAD_URL="https://downloads.apache.org/kafka/${KAFKA_VERSION}/${FILE}"
+
+if ! wget -q $DOWNLOAD_URL; then
+    echo "Primary download failed. Using archive..."
+    wget https://archive.apache.org/dist/kafka/${KAFKA_VERSION}/${FILE}
+fi
+
+# Extract to /opt
+sudo tar -xzf $FILE -C /opt
+sudo mv /opt/kafka_${SCALA_VERSION}-${KAFKA_VERSION} /opt/kafka
+rm $FILE
 
 sudo chown -R $USER:$USER /opt/kafka
 
 # --------------------------------------------------
-# 5. Configure Kafka KRaft
+# 5. Kafka KRaft Configuration
 # --------------------------------------------------
-echo "Configuring Kafka KRaft..."
+echo "Configuring Kafka (KRaft mode)..."
+
+mkdir -p /opt/kafka/config/kraft
 
 cat > /opt/kafka/config/kraft/server.properties <<EOF
 process.roles=broker,controller
 node.id=1
 controller.quorum.voters=1@localhost:9093
+
 listeners=PLAINTEXT://:9092,CONTROLLER://:9093
 listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
 controller.listener.names=CONTROLLER
+
 log.dirs=/tmp/kraft-combined-logs
 num.partitions=3
+offsets.topic.replication.factor=1
+transaction.state.log.replication.factor=1
+transaction.state.log.min.isr=1
 EOF
 
-# Format storage
-KAFKA_CLUSTER_ID=$(/opt/kafka/bin/kafka-storage.sh random-uuid)
-
-echo "Formatting Kafka storage..."
-/opt/kafka/bin/kafka-storage.sh format \
--t $KAFKA_CLUSTER_ID \
--c /opt/kafka/config/kraft/server.properties
+# Format storage (only if not already formatted)
+if [ ! -d "/tmp/kraft-combined-logs" ]; then
+    echo "Formatting Kafka storage..."
+    CLUSTER_ID=$(/opt/kafka/bin/kafka-storage.sh random-uuid)
+    /opt/kafka/bin/kafka-storage.sh format \
+        -t $CLUSTER_ID \
+        -c /opt/kafka/config/kraft/server.properties
+fi
 
 # --------------------------------------------------
-# 6. Create Start Scripts
+# 6. Start Scripts
 # --------------------------------------------------
+echo "Creating helper scripts..."
 
-# Kafka start script
 cat > ~/start-kafka.sh <<EOF
 #!/bin/bash
 /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/kraft/server.properties
 EOF
-
 chmod +x ~/start-kafka.sh
 
-# PostgreSQL start
-cat > ~/start-postgres.sh <<EOF
+cat > ~/stop-kafka.sh <<EOF
 #!/bin/bash
-sudo systemctl start postgresql
+/opt/kafka/bin/kafka-server-stop.sh
 EOF
-
-chmod +x ~/start-postgres.sh
-
-# Redis start
-cat > ~/start-redis.sh <<EOF
-#!/bin/bash
-sudo systemctl start redis-server
-EOF
-
-chmod +x ~/start-redis.sh
+chmod +x ~/stop-kafka.sh
 
 # --------------------------------------------------
 # 7. Verification
@@ -160,5 +173,8 @@ echo "Kafka:"
 echo " Bootstrap: localhost:9092"
 echo ""
 echo "Start Kafka:"
-echo " ./start-kafka.sh"
+echo "  ~/start-kafka.sh"
+echo ""
+echo "Stop Kafka:"
+echo "  ~/stop-kafka.sh"
 echo "=================================================="
