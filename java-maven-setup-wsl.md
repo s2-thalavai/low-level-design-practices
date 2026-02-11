@@ -337,5 +337,19 @@ source ~/.bashrc
 
 <img width="1505" height="1018" alt="image" src="https://github.com/user-attachments/assets/11cdf958-2f79-46e0-bec9-165d825d8fc8" />
 
+
+| Service      | URL                                            |
+| ------------ | ---------------------------------------------- |
+| Kafka UI     | [http://localhost:8080](http://localhost:8080) |
+| pgAdmin      | [http://localhost:5050](http://localhost:5050) |
+| RedisInsight | [http://localhost:5540](http://localhost:5540) |
+
+
+<img width="1918" height="877" alt="image" src="https://github.com/user-attachments/assets/3f48867f-cb5f-4617-bab6-2c4b0f5dc4f2" />
+
+<img width="1912" height="875" alt="image" src="https://github.com/user-attachments/assets/2749471e-d8d6-490a-b6f5-825809eb0bfa" />
+
+<img width="1918" height="871" alt="image" src="https://github.com/user-attachments/assets/a605de42-25b6-440e-84a0-223ec4730434" />
+
 ------------------------------------
 
