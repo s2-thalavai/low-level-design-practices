@@ -1,5 +1,17 @@
 # Java Setup
 
+| Category   | Tools                 |
+| ---------- | --------------------- |
+| Java       | JDK 21, Maven, Gradle |
+| Python     | pyenv, Poetry         |
+| Frameworks | Django, FastAPI       |
+| Workers    | Celery                |
+| Go         | Gin, Fiber, Echo      |
+| Rust       | rustup                |
+| Infra      | Docker                |
+| JS         | Node LTS              |
+
+
 # Java 21 + Maven Setup on Ubuntu (WSL2)
 
 **Environment**
