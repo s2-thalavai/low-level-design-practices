@@ -331,7 +331,9 @@ source ~/.bashrc
 
 <img width="1918" height="1018" alt="image" src="https://github.com/user-attachments/assets/a2ed6c56-d32f-4060-8773-9b7c42d8bde8" />
 
-<img width="1312" height="1017" alt="image" src="https://github.com/user-attachments/assets/9105d664-83b8-4281-9385-e1274090dff7" />
+<img width="1306" height="1017" alt="image" src="https://github.com/user-attachments/assets/81da4e09-be6d-459f-b5ae-3e77e771915b" />
+
+<img width="1203" height="1020" alt="image" src="https://github.com/user-attachments/assets/fd25520a-eb11-4eb7-be6c-cebb61dfad7f" />
 
 ------------------------------------
 
