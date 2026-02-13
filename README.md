@@ -97,7 +97,7 @@ Different languages are designed for different purposes:
     
 -   **Python** – AI, data science, automation
     
--   **Java / C#** – Enterprise applications
+-   **Java / Kotlin** – Enterprise applications
     
 -   **C / C++** – Embedded systems and microcontrollers
     
