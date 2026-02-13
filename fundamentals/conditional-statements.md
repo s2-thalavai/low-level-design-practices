@@ -1,13 +1,13 @@
 
 Below are **all common for-loop versions** counting down from **10 to 1** in:
 
--   Java
+-   Java 21
+  
+-   Kotlin 2
     
--   JavaScript
+-   TypeScript 5
     
--   TypeScript
-    
--   Python
+-   Python 3
 
 ------------------------
 
