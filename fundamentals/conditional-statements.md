@@ -3,8 +3,6 @@ Below are **all common for-loop versions** counting down from **10 to 1** in:
 
 -   Java 21
   
--   Kotlin 2
-    
 -   TypeScript 5
     
 -   Python 3
