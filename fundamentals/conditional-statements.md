@@ -183,7 +183,8 @@ print(i)
 ### 2. Using reversed()
 
 ``` py
-for i in  reversed(range(1, 11)): print(i)
+for i in  reversed(range(1, 11)):
+    print(i)
 ``` 
 
 ----------
@@ -191,7 +192,8 @@ for i in  reversed(range(1, 11)): print(i)
 ### 3. Using list
 
 ``` py
-for i in [10,9,8,7,6,5,4,3,2,1]: print(i)
+for i in [10,9,8,7,6,5,4,3,2,1]:
+    print(i)
 ``` 
 
 ----------
@@ -199,7 +201,8 @@ for i in [10,9,8,7,6,5,4,3,2,1]: print(i)
 ### 4. While loop
 
 ``` py
-i = 10  while i >= 1: print(i)
+i = 10  while i >= 1:
+    print(i)
     i -= 1
 ``` 
 
@@ -317,7 +320,10 @@ let i = 10; do {
 ### 3. Infinite loop + break
 
 ```js
-  let i = 10; while (true) { if (i < 1) break; console.log(i);
+  let i = 10;
+    while (true) {
+        if (i < 1) break;
+            console.log(i);
     i--;
 }
 ``` 
@@ -327,7 +333,9 @@ let i = 10; do {
 ### 4. While with multiple variables
 
 ```js
-let i = 10, j = 0; while (i >= 1) { console.log(i);
+let i = 10, j = 0;
+    while (i >= 1) {
+    console.log(i);
     i--;
     j++;
 }
@@ -338,9 +346,13 @@ let i = 10, j = 0; while (i >= 1) { console.log(i);
 ### 5. Using continue
 
 ```js
-let i = 10; while (i >= 1) { if (i === 7) {
-        i--; continue;
-    } console.log(i);
+let i = 10;
+    while (i >= 1) {
+    if (i === 7) {
+        i--;
+        continue;
+    }
+    console.log(i);
     i--;
 }
 ``` 
@@ -356,7 +368,9 @@ let i = 10; while (i >= 1) { if (i === 7) {
 ### 1. Standard typed while
 
 ```ts
-let  i: number = 10; while (i >= 1) { console.log(i);
+let  i: number = 10;
+while (i >= 1) {
+    console.log(i);
     i--;
 }
 ``` 
@@ -366,7 +380,9 @@ let  i: number = 10; while (i >= 1) { console.log(i);
 ### 2. do...while
 
 ```ts
-let  i: number = 10; do { console.log(i);
+let  i: number = 10;
+do {
+    console.log(i);
     i--;
 } while (i >= 1);
 ``` 
@@ -376,7 +392,10 @@ let  i: number = 10; do { console.log(i);
 ### 3. Infinite + break
 
 ```ts
-let  i: number = 10; while (true) { if (i < 1) break; console.log(i);
+let  i: number = 10;
+    while (true) {
+        if (i < 1) break;
+        console.log(i);
     i--;
 }
 ``` 
@@ -412,7 +431,8 @@ i = 10  while i >= 1: print(i)
 ### 2. While True + break
 
 ```py
-i = 10  while  True: if i < 1: break  print(i)
+i = 10  while  True: if i < 1: break
+    print(i)
     i -= 1
 ``` 
 
@@ -421,8 +441,10 @@ i = 10  while  True: if i < 1: break  print(i)
 ### 3. While with else
 
 ```py
-i = 10  while i >= 1: print(i)
-    i -= 1  else: print("Done")
+i = 10  while i >= 1:
+    print(i)
+    i -= 1
+    else: print("Done")
 ``` 
 
 (`else` runs when loop exits normally)
