@@ -99,8 +99,7 @@ Different languages are designed for different purposes:
     
 -   **Java / Kotlin** – Enterprise applications
     
--   **C / C++** – Embedded systems and microcontrollers
-    
+  
 
 While the **concepts remain the same**, the **syntax** (how you write the code) differs from one language to another.
 
