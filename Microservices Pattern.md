@@ -86,7 +86,7 @@ public class InvoiceGatewayController {
 
 ----------
 
-# 🛡 Add Production Resilience at Gateway
+# Add Production Resilience at Gateway
 
 You should protect downstream calls.
 
@@ -336,4 +336,237 @@ But always:
 ----------------------
 
 ## Scatter- gather Design Pattern
+
+> Send request to multiple services in parallel (scatter)  
+> Collect all responses and combine them (gather)
+
+It is ideal when:
+
+-   Multiple independent sources must respond
+    
+-   No strict ordering required
+    
+-   Latency should be minimized
+
+
+# P2P Example: Supplier Price Discovery
+
+### Scenario
+
+Procurement team wants to create a Purchase Order.
+
+System must:
+
+-   Ask multiple approved suppliers for quote
+    
+-   Collect prices
+    
+-   Select best offer
+    
+-   Return comparison
+    
+
+This is classic Scatter-Gather.
+
+```
+Procurement UI
+      │
+      ▼
+Supplier Aggregator Service
+      │
+      ├── Supplier A API
+      ├── Supplier B API
+      ├── Supplier C API
+      └── Supplier D API
+      │
+      ▼
+Aggregate & Rank Quotes
+      ▼
+Return Best Quote
+
+
+```
+
+All supplier calls are independent → perfect for parallel execution.
+
+
+# Reactive Implementation (WebFlux)
+
+## Step 1 — Supplier IDs to Query
+
+```java
+List<String> supplierIds = List.of("SUP-A", "SUP-B", "SUP-C", "SUP-D");
+``` 
+
+----------
+
+## Step 2 — Scatter (Parallel Calls)
+
+```java
+public Flux<Quote> fetchQuotes(ProductRequest request) { return Flux.fromIterable(request.getSupplierIds())
+            .flatMap(supplierId ->
+                webClient.post()
+                        .uri("http://supplier-service/suppliers/{id}/quote", supplierId)
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(Quote.class)
+                        .timeout(Duration.ofSeconds(2))
+                        .onErrorResume(ex -> Mono.empty()) // ignore failed supplier );
+}
+``` 
+
+What happens here:
+
+-   Requests fired in parallel
+    
+-   Each supplier responds independently
+    
+-   Slow supplier doesn’t block others
+    
+
+----------
+
+## Step 3 — Gather and Rank
+
+```java
+public Mono<QuoteComparisonResponse> getBestQuote(ProductRequest request) { return fetchQuotes(request)
+            .collectList()
+            .map(quotes -> {
+
+                quotes.sort(Comparator.comparing(Quote::price)); return  new  QuoteComparisonResponse(
+                        quotes,
+                        quotes.isEmpty() ? null : quotes.get(0) // best price );
+            });
+}
+``` 
+
+----------
+
+## Full Scatter-Gather Flow
+
+```
+Flux.fromIterable(suppliers)
+        │
+        ▼
+flatMap (parallel HTTP calls)
+        │
+        ▼
+Flux<Quote>
+        │
+        ▼ collectList()
+        │
+        ▼
+Rank + Select Best
+``` 
+
+----------
+
+## Performance Benefit
+
+If 4 suppliers each take 500ms:
+
+Sequential = 2 seconds  
+Parallel = ~500ms
+
+That’s the power of Scatter-Gather.
+
+----------
+
+## Production Enhancements
+
+## 1. Limit Concurrency
+
+Avoid blasting 100 suppliers at once:
+
+```java
+.flatMap(this::callSupplier, 5) // max 5 concurrent calls
+``` 
+
+----------
+
+## 2. Timeout Per Supplier
+
+```java
+.timeout(Duration.ofSeconds(2))
+``` 
+
+----------
+
+## 3. Circuit Breaker per Supplier
+
+If Supplier C keeps failing → stop calling temporarily.
+
+----------
+
+## 4. Partial Success Strategy
+
+If only 2 of 4 suppliers respond:
+
+-   Continue with available quotes
+    
+-   Do not fail whole request
+
+------------------
+
+
+## Another P2P Example: Budget Validation Across Departments
+
+When creating large PO:
+
+System must check:
+
+-   Department Budget Service
+    
+-   Finance Service
+    
+-   Compliance Service
+    
+-   Risk Assessment Service
+    
+
+All checks independent → Scatter-Gather.
+
+| Scatter-Gather              | Orchestrator                   |
+| --------------------------- | ------------------------------ |
+| Parallel                    | Can be sequential              |
+| No dependency between calls | Calls may depend on each other |
+| Best for aggregation        | Best for workflows             |
+| Low coupling                | Controlled business flow       |
+
+------------------
+
+
+# When to Use in P2P
+
+Use Scatter-Gather for:
+
+- Supplier comparison  
+- Multi-source validation  
+- Fraud scoring  
+- Credit bureau lookup  
+- Multi-warehouse inventory check
+
+Do NOT use when:
+
+-  Strict ordering required  
+-  Transaction rollback needed  
+- One step depends on previous
+
+
+Scatter-Gather is:
+
+> “Ask everyone at once, then decide.”
+
+In Procure-to-Pay, it is heavily used during:
+
+-   Vendor discovery
+    
+-   Price optimization
+    
+-   Risk scoring
+    
+-   Pre-approval checks
+  
+--------------------
+
 
