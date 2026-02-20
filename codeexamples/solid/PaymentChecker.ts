@@ -1,4 +1,4 @@
-// 1️⃣ INTERFACE SEGREGATION + ABSTRACTION
+// 1️. INTERFACE SEGREGATION + ABSTRACTION
 interface PaymentMethod {
   pay(amount: number): void;
 }
@@ -7,7 +7,7 @@ interface Refundable {
   refund(amount: number): void;
 }
 
-// 2️⃣ DEPENDENCY INVERSION (high-level depends on abstraction)
+// 2️. DEPENDENCY INVERSION (high-level depends on abstraction)
 interface Logger {
   log(message: string): void;
 }
@@ -19,7 +19,7 @@ class ConsoleLogger implements Logger {
   }
 }
 
-// 3️⃣ ABSTRACT CLASS (Abstraction)
+// 3️. ABSTRACT CLASS (Abstraction)
 abstract class BasePayment implements PaymentMethod {
   constructor(protected logger: Logger) {}
 
@@ -33,13 +33,13 @@ abstract class BasePayment implements PaymentMethod {
   abstract pay(amount: number): void;
 }
 
-// 4️⃣ INHERITANCE
+// 4️. INHERITANCE
 class CreditCardPayment extends BasePayment implements Refundable {
   constructor(logger: Logger, private cardNumber: string) {
     super(logger);
   }
 
-  // 5️⃣ POLYMORPHISM (method overriding)
+  // 5️. POLYMORPHISM (method overriding)
   override pay(amount: number): void {
     this.validate(amount);
     this.logger.log(`Paid ₹${amount} using Credit Card`);
@@ -61,7 +61,7 @@ class UpiPayment extends BasePayment {
   }
 }
 
-// 6️⃣ SINGLE RESPONSIBILITY
+// 6️. SINGLE RESPONSIBILITY
 // This class only processes payments, nothing else.
 class PaymentProcessor {
   constructor(private paymentMethod: PaymentMethod) {}
@@ -71,13 +71,13 @@ class PaymentProcessor {
   }
 }
 
-// 7️⃣ OPEN/CLOSED PRINCIPLE
+// 7️. OPEN/CLOSED PRINCIPLE
 // We can add new payment types WITHOUT modifying PaymentProcessor.
 
-// 8️⃣ LISKOV SUBSTITUTION
+// 8️. LISKOV SUBSTITUTION
 // Any subclass of BasePayment works in place of PaymentMethod.
 
-// 9️⃣ ENCAPSULATION
+// 9️. ENCAPSULATION
 class BankAccount {
   private balance: number = 0;
 
@@ -91,7 +91,7 @@ class BankAccount {
   }
 }
 
-// 🔟 COMPOSITION OVER INHERITANCE
+// 10. COMPOSITION OVER INHERITANCE
 // Instead of extending logger, we inject it (composition).
 
 // ------------------ USAGE ------------------
