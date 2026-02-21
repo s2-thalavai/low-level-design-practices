@@ -398,7 +398,37 @@ type User = {
 
 ### Step 2 — Create Custom Type Guard
 
+## Basic Example
+
 ```ts
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+```
+
+Usage:
+
+```ts
+function process(input: unknown) {
+  if (isString(input)) {
+    console.log(input.toUpperCase()); // input: string
+  }
+}
+```
+
+Notice the return type:
+
+```ts
+value is string
+```
+
+That is the type predicate.
+
+-----------------
+
+
+```ts
+
 function isUser(obj: unknown): obj is User {
   return (
     typeof obj === "object" &&
@@ -412,6 +442,20 @@ function isUser(obj: unknown): obj is User {
   );
 }
 ```
+
+### Usage:
+
+```ts
+const response: unknown = JSON.parse('{"id":"1","name":"Siva"}');
+
+if (isUser(response)) {
+  console.log("Valid user:", response.name);
+} else {
+  console.log("Invalid response");
+}
+```
+
+
 This:
 
   - Checks runtime structure
@@ -613,4 +657,41 @@ At API boundaries:
 This prevents 90% of production crashes.
 
 -----------------
+
+## 4. Discriminated Union (Best Pattern)
+
+This is how enterprise apps structure domain models.
+
+```ts
+type Payment =
+  | { type: "card"; cardNumber: string }
+  | { type: "upi"; upiId: string }
+  | { type: "cash" };
+```
+
+Type guard via discriminator:
+
+```ts
+function processPayment(payment: Payment) {
+  switch (payment.type) {
+    case "card":
+      console.log(payment.cardNumber);
+      break;
+
+    case "upi":
+      console.log(payment.upiId);
+      break;
+
+    case "cash":
+      console.log("Cash payment");
+      break;
+  }
+}
+```
+
+No custom guard needed — TypeScript auto-narrows.
+
+This is the recommended enterprise pattern.
+
+------------
 
