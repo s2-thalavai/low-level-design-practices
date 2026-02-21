@@ -187,3 +187,430 @@ console.log(handler4);
 
 <img width="1356" height="551" alt="image" src="https://github.com/user-attachments/assets/c1b403a2-52d3-4c6a-bb32-08789405fffe" />
 
+==================
+
+# Type Guards
+
+A **type guard** is a runtime check that tells TypeScript:
+
+> “Inside this block, the type is narrowed.”
+
+### 1. typeof 
+
+`typeof` — For Primitives
+
+Use when checking:
+
+-   string
+    
+-   number
+    
+-   boolean
+    
+-   bigint
+    
+-   symbol
+    
+-   undefined
+    
+-   function
+  
+```ts
+function print(value: string | number) {
+  if (typeof value === "string") {
+    return value.toUpperCase(); // value: string
+  } else {
+    return value.toFixed(2); // value: number
+  }
+}
+
+console.log(print("typescript"));
+console.log(print(99.99999));
+```
+
+typeof "abc"       // "string"
+typeof 123         // "number"
+typeof true        // "boolean"
+typeof undefined   // "undefined"
+typeof {}          // "object"
+typeof []          // "object"
+
+------------
+
+### 2. instanceof
+
+Checks if object was created using a constructor.
+
+```ts
+
+class User {
+  constructor(public name: string) {}
+}
+
+function greet(obj: User | Date): string {
+  if (obj instanceof User) {
+    return obj.name;
+  } else {
+    return obj.toISOString();
+  }
+}
+
+const user1 = new User("sankar");
+
+console.log("User :", greet(user1));
+console.log("Date :", greet(new Date()));
+
+```
+
+<img width="1353" height="503" alt="image" src="https://github.com/user-attachments/assets/ab3648d1-d197-4f45-9dd4-6f763b01828c" />
+
+### This fails with plain objects
+
+```ts
+const fakeUser = { name: "Siva" };
+
+console.log(fakeUser instanceof User); // false
+```
+
+Even though structure matches!
+
+Because:
+
+instanceof checks prototype chain, not structure.
+
+
+# Structural vs Prototype-Based
+
+TypeScript is:
+
+✔ Structural (shape-based)
+
+JavaScript `instanceof` is:
+
+✔ Prototype-based (class-based)
+
+
+
+## When to Use What
+
+### Use `typeof` when:
+
+-   Working with primitives
+    
+-   Handling union types like `string | number`
+    
+-   Narrowing unknown values
+    
+
+----------
+
+### Use `instanceof` when:
+
+-   Working with class instances
+    
+-   Built-in objects (Date, Error, Map)
+    
+-   You control object creation
+
+### API Response (Never use instanceof)
+
+```ts
+type User = {
+  id: string;
+  name: string;
+};
+
+function isUser(obj: any): obj is User {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.id === "string" &&
+    typeof obj.name === "string"
+  );
+}
+```
+
+## Advanced Example: Built-in Classes
+
+```ts
+function handle(input: Date | Error) {
+  if (input instanceof Date) {
+    console.log(input.toISOString());
+  } else {
+    console.log(input.message);
+  }
+}
+```
+
+-------------
+
+| Feature               | `typeof`                      | `instanceof`              |
+| --------------------- | ----------------------------- | ------------------------- |
+| Checks                | Primitive type                | Class instance            |
+| Works on              | string, number, boolean, etc. | Objects created via `new` |
+| Runtime?              | Yes                           | Yes                       |
+| TS narrowing?         | Yes                           | Yes                       |
+| Uses prototype chain? |  No                          | Yes                        |
+
+-------------------
+
+| Use Case                      | Use               |
+| ----------------------------- | ----------------- |
+| Primitive union               | `typeof`          |
+| Class instance                | `instanceof`      |
+| API JSON object               | Custom type guard |
+| Built-in object (Date, Error) | `instanceof`      |
+| Array check                   | `Array.isArray()` |
+
+---------------------
+
+
+In enterprise systems:
+
+-   `typeof` → primitive narrowing
+    
+-   `instanceof` → domain objects
+    
+-   Custom guards → API boundary validation
+    
+-   Discriminated unions → best pattern for domain modeling
+
+---------------------------
+
+##  Custom guards → API boundary validation
+
+We mean:
+
+- Never trust external data
+- Validate at the boundary
+- Narrow unknown → Safe domain type
+- Prevent runtime crashes
+
+### Step 1 — Define Domain Model
+
+```ts
+type User = {
+  id: string;
+  name: string;
+  isActive: boolean;
+};
+```
+
+### Step 2 — Create Custom Type Guard
+
+```ts
+function isUser(obj: unknown): obj is User {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "id" in obj &&
+    "name" in obj &&
+    "isActive" in obj &&
+    typeof (obj as any).id === "string" &&
+    typeof (obj as any).name === "string" &&
+    typeof (obj as any).isActive === "boolean"
+  );
+}
+```
+This:
+
+  - Checks runtime structure
+  
+  - Narrows compile-time type
+
+### Step 3 — Use at API Boundary
+
+```ts
+
+async function fetchUser(): Promise<User> {
+  const response = await fetch("/api/user");
+  const data: unknown = await response.json();
+
+  if (!isUser(data)) {
+    throw new Error("Invalid user response from API");
+  }
+
+  return data; // fully typed User
+}
+```
+Now:
+
+  Runtime safe
+  
+  Compile-time safe
+  
+  Domain protected
+
+--------------
+
+### Why This Is Important
+
+Without guard:
+
+```ts
+const user = await fetchUser();
+console.log(user.name.toUpperCase()); // might crash
+```
+
+If backend returns:
+
+```json
+{ "id": 1, "name": null }
+```
+
+App crashes.
+
+> With guard → fail early.
+
+
+## Real Enterprise Pattern (Layered Architecture)
+
+```
+API Layer
+   ↓ (validate)
+DTO Layer
+   ↓ (map)
+Domain Layer
+```
+
+
+### Example:
+
+## Step 1 — API DTO
+
+```ts
+type UserDto = {
+  id: string;
+  name: string;
+  isActive: boolean;
+};
+```
+
+## Step 2 — Guard
+
+```ts
+function isUserDto(data: unknown): data is UserDto {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    typeof (data as any).id === "string" &&
+    typeof (data as any).name === "string" &&
+    typeof (data as any).isActive === "boolean"
+  );
+}
+```
+
+## Step 3 — Map to Domain
+
+```
+type DomainUser = {
+  id: string;
+  displayName: string;
+  active: boolean;
+};
+
+function mapToDomain(dto: UserDto): DomainUser {
+  return {
+    id: dto.id,
+    displayName: dto.name,
+    active: dto.isActive,
+  };
+}
+```
+
+## Step 4 — Safe API Call
+
+```ts
+async function getUser(): Promise<DomainUser> {
+  const res = await fetch("/api/user");
+  const data: unknown = await res.json();
+
+  if (!isUserDto(data)) {
+    throw new Error("Invalid API response");
+  }
+
+  return mapToDomain(data);
+}
+```
+
+
+## Reusable validator:
+
+```ts
+function  isObject(value: unknown): value  is  Record<string, unknown> {  
+  return  typeof  value  ===  "object"  &&  value  !==  null;  
+}
+```
+
+Use in other guards to reduce duplication.
+
+
+# When You MUST Use This
+
+-   External APIs
+    
+-   Microservices
+    
+-   Browser localStorage
+    
+-   Third-party SDKs
+    
+-   WebSocket messages
+    
+-   Event bus payloads
+    
+
+Never trust external input.
+
+------------------
+
+
+##
+Even Better: Schema Libraries
+
+In large enterprise apps, teams use:
+
+-   Zod
+    
+-   Yup
+    
+-   Joi
+    
+
+Because writing manual guards is repetitive.
+
+Example concept (simplified):
+
+```ts
+const  userSchema  =  z.object({  
+ id: z.string(),  
+ name: z.string(),  
+ isActive: z.boolean(),  
+});
+```
+
+Then:
+
+```ts
+const  user  =  userSchema.parse(data);
+```
+
+Runtime + compile-time alignment.
+
+-------------------
+
+At API boundaries:
+
+1.  Accept `unknown`
+    
+2.  Validate
+    
+3.  Map to domain
+    
+4.  Never expose raw DTOs internally
+    
+
+This prevents 90% of production crashes.
+
+-----------------
+
