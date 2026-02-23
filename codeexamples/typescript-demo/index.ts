@@ -702,3 +702,579 @@ students.map(function (student) {
   // No need to explicitly write (student: string)
   console.log(student);
 });
+
+// ----------------void and never types ------------
+
+// Sometimes functions perform an action but do not return any value.
+// In such cases, TypeScript uses the special return type: void
+function writeToDatabase(value: string): void {
+  // Simulating a database write operation
+  console.log("Writing to database:", value);
+
+  // No return statement → return type is void
+}
+
+// The 'never' type represents functions that NEVER complete normally.
+// This can happen when a function:
+// 1. Always throws an error
+// 2. Has an infinite loop
+function throwError(error: string): never {
+  // This function always throws an exception
+  // Execution stops here and never returns to the caller
+  throw new Error(error);
+}
+
+// --------------------------------------------------
+// Type Relationship: void vs never
+// --------------------------------------------------
+
+// 'never' is a subtype of all types (including void)
+// This means: never can be assigned where void is expected
+type check = never extends void ? true : false; 
+// Result: true
+
+// But 'void' is NOT a subtype of never
+// A void function may complete execution (just without returning a value)
+type checks = void extends never ? true : false; 
+// Result: false
+
+
+// --------------------------------------------------
+// Async functions in JavaScript always return a Promise
+// Even if you return a plain value, it is wrapped in Promise.resolve()
+// --------------------------------------------------
+
+// Declaration of async function using the function keyword
+// Return type is Promise<any>
+async function fetchFromDatabase(id: number): Promise<any> {
+  // Simulate fetching data
+  return Promise.resolve({ id });
+}
+
+// Declaration of async function using arrow function syntax
+// Return type annotation comes after the parameter list
+const anotherAsyncFunction = async (): Promise<any> => {
+  return Promise.resolve("Some data");
+};
+
+// Async function as a function expression
+const functionExpression = async function (): Promise<any> {
+  return Promise.resolve(true);
+};
+
+// --------------------------------------------------
+// Strict return types for async functions
+// --------------------------------------------------
+
+// This function returns a Promise that resolves to a string
+async function returnString(id: number): Promise<string> {
+  // TypeScript ensures the resolved value is a string
+  return Promise.resolve("string");
+}
+
+// --------------------------------------------------
+// Using Type Alias for complex return types
+// --------------------------------------------------
+
+// User type definition
+type User = {
+  name: string;
+  age: number;
+};
+
+// Async function that returns a User object
+// Return type: Promise<User>
+async function returnObject(id: number): Promise<User> {
+  // The resolved object must match the User type
+  return Promise.resolve({
+    name: "John",
+    age: 21,
+  });
+}
+
+// If you remove 'age' or change its type,
+// TypeScript will throw a compile-time error
+// because the returned object no longer matches User
+
+// --------------------------------------------------
+// Example usage
+// --------------------------------------------------
+
+returnString(1).then((result) => {
+  console.log("String result:", result);
+});
+
+returnObject(1).then((user) => {
+  console.log("User:", user.name, user.age);
+});
+
+// --------------------------------------------------
+// Rest Parameters (Unlimited Arguments)
+// --------------------------------------------------
+
+// Function that multiplies multiple numbers by a given value
+// 'by' → mandatory parameter
+// '...numbers' → rest parameter (can accept unlimited numbers)
+// TypeScript infers 'numbers' as number[]
+function multiplyBy(by: number, ...numbers: number[]) {
+  // numbers is an array of numbers
+  // map() returns a new array after multiplying each value
+  return numbers.map((eachNumber) => by * eachNumber);
+}
+
+// Calling the function with multiple arguments
+console.log(multiplyBy(2, 3, 4, 5)); // [6, 8, 10]
+console.log(multiplyBy(2, 3, 4));    // [6, 8]
+
+// --------------------------------------------------
+// Strict typing when spreading arrays into functions
+// --------------------------------------------------
+
+// Normal array of numbers
+const args = [8, 5];
+
+// Math.atan2 expects exactly TWO arguments: (y, x)
+// Error occurs because 'args' is number[]
+// TypeScript cannot guarantee the array length is exactly 2
+const angle = Math.atan2(...args);
+
+// --------------------------------------------------
+// Solution 1: Use 'as const' to create a tuple
+// --------------------------------------------------
+
+// 'as const' makes the array:
+// - Readonly
+// - Fixed length
+// - Literal tuple type: readonly [8, 5]
+const args1 = [8, 5] as const;
+
+// Now TypeScript knows there are exactly two numbers
+const angle1 = Math.atan2(...args1);
+
+// --------------------------------------------------
+// Solution 2: Explicit Tuple Type Annotation
+// --------------------------------------------------
+
+// Define a tuple type with fixed length: [number, number]
+const args2: [number, number] = [8, 5];
+
+// No need for 'as const' here
+// TypeScript knows exactly two values will be passed
+const angle2 = Math.atan2(...args2);
+
+// ---------------------
+
+// --------------------------------------------------
+// Invoice Line Item Example using Parameter Destructuring
+// --------------------------------------------------
+
+// Type representing a single invoice line item
+type InvoiceLineItem = {
+  description: string;   // Item name or description
+  quantity: number;      // Number of units
+  unitPrice: number;     // Price per unit
+};
+
+// Sample invoice line item object
+let lineItem: InvoiceLineItem = {
+  description: "Laptop",
+  quantity: 2,
+  unitPrice: 50000,
+};
+
+// --------------------------------------------------
+// Function to calculate total amount for a line item
+// Using parameter destructuring
+// --------------------------------------------------
+
+// Destructuring allows direct access to properties
+// TypeScript infers quantity and unitPrice as number
+function calculateLineTotal({ quantity, unitPrice }: InvoiceLineItem): number {
+  // Total = quantity × unit price
+  return quantity * unitPrice;
+}
+
+// Invoking the function with a valid object
+console.log(calculateLineTotal(lineItem)); // 100000
+
+// --------------------------------------------------
+// Type Safety Example
+// --------------------------------------------------
+
+// If wrong types are passed, TypeScript throws an error
+// unitPrice must be a number, not a string
+console.log(
+  calculateLineTotal({
+    description: "Mouse",
+    quantity: 2,
+    unitPrice: "500", // Error: Type 'string' is not assignable to type 'number'
+  })
+);
+
+// --------------------------------------------------
+// Function Overloading in TypeScript
+// --------------------------------------------------
+
+// JavaScript functions are dynamic and can behave differently
+// based on the number or type of arguments passed.
+// Example: String.slice()
+const str = "Hello, World!";
+const part1 = str.slice(7);       // From index 7 to end
+const part2 = str.slice(7, 10);   // From index 7 to 10 (exclusive)
+
+console.log(part1); // World!
+console.log(part2); // Wor
+
+// --------------------------------------------------
+// Hypothetical Air Ticket Reservation System
+// Goal: Create a function that supports:
+// 1. One-way trip
+// 2. Round trip
+// This is achieved using Function Overloading
+// --------------------------------------------------
+
+// Reservation type
+type Reservation = {
+  departureDate: Date;
+  returnDate?: Date;     // Optional (not required for one-way)
+  departingFrom: string;
+  destination: string;
+};
+
+
+
+
+
+
+
+
+// --------------------------------------------------
+// Function Overload Signatures
+// These define how the function can be called
+// --------------------------------------------------
+
+// Using a more explicit syntax for call signatures
+// This is considered as an object with keys as function params
+type Reserve = {
+  (departureDate: Date, returnDate: Date, departingFrom: string, destination: string): Reservation;
+};
+
+// --------------------------------------------------
+// JavaScript Dynamic Function Example
+// Functions can behave differently based on arguments
+// --------------------------------------------------
+
+const str = "Hello, World!";
+
+// slice(start) → returns from index to end
+const part1 = str.slice(7);
+
+// slice(start, end) → returns substring within range
+const part2 = str.slice(7, 10);
+
+console.log(part1); // World!
+console.log(part2); // Wor
+
+// --------------------------------------------------
+// Function Overloading in TypeScript
+// Scenario: Air Ticket Reservation System
+// A reservation can be:
+// 1. One-way (no return date)
+// 2. Round-trip (with return date)
+// --------------------------------------------------
+
+// Reservation model
+type Reservation = {
+  departureDate: Date;
+  returnDate?: Date;       // Optional for one-way trips
+  departingFrom: string;
+  destination: string;
+};
+
+// --------------------------------------------------
+// Function Overload Call Signatures
+// Defines multiple valid ways to call the function
+// --------------------------------------------------
+
+type Reserve = {
+  // Round-trip booking (4 parameters)
+  (
+    departureDate: Date,
+    returnDate: Date,
+    departingFrom: string,
+    destination: string
+  ): Reservation | never;
+
+  // One-way booking (3 parameters)
+  (
+    departureDate: Date,
+    departingFrom: string,
+    destination: string
+  ): Reservation | never;
+};
+
+// --------------------------------------------------
+// Function Implementation
+// Must handle all overload scenarios
+// --------------------------------------------------
+
+const reserve: Reserve = (
+  departureDate: Date,
+  returnDateOrDepartingFrom: Date | string,
+  departingFromOrDestination: string,
+  destination?: string
+) => {
+  // Case 1: Round-trip booking
+  // If second parameter is Date and destination exists
+  if (returnDateOrDepartingFrom instanceof Date && destination) {
+    return {
+      departureDate: departureDate,
+      returnDate: returnDateOrDepartingFrom,
+      departingFrom: departingFromOrDestination,
+      destination: destination,
+    };
+  }
+
+  // Case 2: One-way booking
+  // If second parameter is string (departingFrom)
+  else if (typeof returnDateOrDepartingFrom === "string") {
+    return {
+      departureDate: departureDate,
+      departingFrom: returnDateOrDepartingFrom,
+      destination: departingFromOrDestination,
+    };
+  }
+
+  // If arguments do not match any overload
+  throw new Error("Please provide valid details to reserve a ticket");
+};
+
+// --------------------------------------------------
+// Usage Examples
+// --------------------------------------------------
+
+// Round-trip reservation
+console.log(
+  reserve(new Date(), new Date(), "New York", "Washington")
+);
+
+// One-way reservation
+console.log(
+  reserve(new Date(), "New York", "Washington")
+);
+
+
+
+
+// ----------------------------other way
+// One-way trip (3 arguments)
+function reserve(
+  departureDate: Date,
+  departingFrom: string,
+  destination: string
+): Reservation;
+
+// Round trip (4 arguments)
+function reserve(
+  departureDate: Date,
+  returnDate: Date,
+  departingFrom: string,
+  destination: string
+): Reservation;
+
+// --------------------------------------------------
+// Actual Function Implementation
+// Must handle all overload cases
+// --------------------------------------------------
+function reserve(
+  departureDate: Date,
+  returnDateOrFrom: Date | string,
+  departingFromOrDestination: string,
+  destination?: string
+): Reservation {
+  // Case 1: Round trip (returnDate is provided)
+  if (returnDateOrFrom instanceof Date) {
+    return {
+      departureDate,
+      returnDate: returnDateOrFrom,
+      departingFrom: departingFromOrDestination,
+      destination: destination!,
+    };
+  }
+
+  // Case 2: One-way trip
+  return {
+    departureDate,
+    departingFrom: returnDateOrFrom,
+    destination: departingFromOrDestination,
+  };
+}
+
+// --------------------------------------------------
+// Usage Examples
+// --------------------------------------------------
+
+// One-way reservation
+const oneWay = reserve(
+  new Date("2026-03-01"),
+  "Chennai",
+  "Delhi"
+);
+
+// Round-trip reservation
+const roundTrip = reserve(
+  new Date("2026-03-01"),
+  new Date("2026-03-10"),
+  "Chennai",
+  "Delhi"
+);
+
+console.log(oneWay);
+console.log(roundTrip);
+
+------------
+
+// --------------------------------------------------
+// 1. Function: greet
+// Takes a name (string) and returns a greeting message (string)
+// --------------------------------------------------
+
+function greet(name: string): string {
+  // Using template literals to create a greeting message
+  return `Hello, ${name}!`;
+}
+
+console.log(greet("Sankar"));
+
+
+// --------------------------------------------------
+// 2. Product Type and getProduct Function
+// Define a Product type and return a product based on id
+// --------------------------------------------------
+
+// Product model
+type Product = {
+  id: number;     // Unique product identifier
+  name: string;   // Product name
+};
+
+// Function that takes product id and returns a Product
+function getProduct(id: number): Product {
+  // In real applications, this could fetch from DB or API
+  return {
+    id: id,
+    name: "Sample Product",
+  };
+}
+
+console.log(getProduct(101));
+
+
+// --------------------------------------------------
+// 3. Function Signature Type (Calculator)
+// Create a function type and implement add & subtract
+// --------------------------------------------------
+
+// Function type: takes two numbers and returns a number
+type Calculator = (a: number, b: number) => number;
+
+// Add function matching Calculator signature
+const add: Calculator = (a, b) => {
+  return a + b;
+};
+
+// Subtract function matching Calculator signature
+const subtract: Calculator = (a, b) => {
+  return a - b;
+};
+
+console.log(add(10, 5));        // 15
+console.log(subtract(10, 5));   // 5
+
+
+// --------------------------------------------------
+// 4. void and never examples
+// --------------------------------------------------
+
+// Function that logs a message and returns nothing (void)
+function logMessage(message: string): void {
+  console.log("Log:", message);
+}
+
+logMessage("Application started");
+
+
+// Function that always throws an error (never)
+// Execution never completes normally
+function throwError(message: string): never {
+  throw new Error(message);
+}
+
+// Uncomment to test (will stop execution)
+// throwError("Something went wrong");
+
+// --------------
+
+// What is the type of the parameter:
+
+// function ex(param1?: string){}
+
+// String | Undefined
+
+// --------------------
+
+console.log("------------Generics in TypeScript------------------------------");
+
+// Let us look at this simple function which just returns the param
+
+//* function returnParam(param) {
+//*   return param;
+//* }
+
+// TS has a problem and is warning that param is of any type or is implicitly declared at any
+//* function returnParam(param: any) {
+//*   return param;
+//* }
+
+// While using any is certainly generic in that it will cause the function to accept any and all types for the type of arg, we actually are losing the information about what that type was when the function returns. If we passed in a number, the only information we have is that any type could be returned.
+
+// Since now we do not know the return type of this function we end up usign the return type as
+// any as well. We are back to JS behaviour
+
+//* function returnParam(param: any): any {
+//*   return param;
+//* }
+
+// Here, we will use a type variable, a special kind of variable that works on types rather than values. This is a generic variable we can pass to our function to retain the type of the value used
+// This is how it is done in case of functions
+
+function returnParam<Type>(param: Type): Type {
+  return param;
+}
+
+// With this generic in place the value of the type used to invoke the function is retained
+// thi is one way of invoking the function
+let stringOutput = returnParam<string>("string");
+
+//Here we explicitly set Type to be string as one of the arguments to the function call, denoted using the <> around the arguments rather than ().
+
+// The second way is also perhaps the most common. Here we use type argument inference — that is, we want the compiler to set the value of Type for us automatically based on the type of the argument we pass in:
+let stringOutput2 = returnParam("string");
+let numberOutput = returnParam(100);
+let numberArray = returnParam([1, 2, 3]);
+let objectOutput = returnParam({ name: "Mark", age: 21 });
+
+// Generic function declaration as an arrow function
+// using a call signature
+const myParam: <T>(param: T) => T = (param) => param;
+
+// Using a function expression
+const myParam2 = function <U>(param: U): U {
+  return param;
+};
+
+// Using a call signature in an object
+type ObjectType = {
+  myParam: <V>(param: V) => V;
+};
+  
