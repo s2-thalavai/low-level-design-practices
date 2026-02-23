@@ -519,3 +519,186 @@ function fetchUserData(id: number){
 
 const fetchedUserData = fetchUserData(12);
 console.log(`Fetched User Name: ${fetchedUserData.name}, Fetched User Age: ${fetchedUserData.age}`); // Fetched User Name: John Doe, Fetched User Age: 30
+
+
+Console.log("--------------------------Functions in TS -----------------------------");
+
+// Defining a named function in TypeScript
+function intro(name: string, age: number): string {
+  return `My name is ${name} and I am ${age} years old`;
+}
+
+// Using a fucntion expression
+const intro2 = function (name: string, age: number): string {
+  return `My name is ${name} and I am ${age} years old`;
+};
+
+// Using the arrow function syntax
+const intro3 = (name: string, age: number): string => {
+  return `My name is ${name} and I am ${age} years old`;
+};
+
+
+// Functions often need optional params
+// We can add optional params by using ? just like we do with objects, PAUSE AND PRACTICE
+function intro(name: string, age: number, country?: string): string {
+  if (country) {
+    return `My name is ${name} and I am ${age} years old, I live in ${country}`;
+  }
+  return `My name is ${name} and I am ${age} years old`;
+}
+
+// TypeScript will throw an error if all defualt params are not added as arguments
+// The error displays while you are programming and not at runtime
+//! intro("John");
+intro("Sankar", 32);
+
+--------
+
+  // Enum to represent the unit of age
+// Using enum avoids magic strings and ensures type safety
+enum AgeUnit {
+  Years = "years",
+  Months = "months",
+}
+
+// Person type definition
+// Represents a person with name, age value, age unit, and country
+type Person = {
+  name: string;        // Person's name
+  age: number;         // Age value (based on ageUnit)
+  ageUnit: AgeUnit;    // Unit of age (Years or Months)
+  country: string;     // Country of residence
+};
+
+// Sample person object
+let person: Person = {
+  name: "Sankar",
+  age: 34,
+  ageUnit: AgeUnit.Years,
+  country: "India",
+};
+
+/**
+ * Converts a person's age to months.
+ *
+ * Behavior:
+ * - If age is in Years → converts to Months (age * 12)
+ * - If already in Months → no change
+ *
+ * Note:
+ * This function MUTATES the original object (not immutable).
+ * In enterprise applications, consider returning a new object instead.
+ */
+function convertAgeToMonths(person: Person): Person {
+  // Check if age is currently in years
+  if (person.ageUnit === AgeUnit.Years) {
+    // Convert years to months
+    person.age = person.age * 12;
+
+    // Update the age unit
+    person.ageUnit = AgeUnit.Months;
+  }
+
+  // Return the updated person object
+  return person;
+}
+
+// Execute conversion and print result
+console.log(convertAgeToMonths(person));
+
+// ----------------------
+
+// Function call Signature
+
+// Enum to represent age units
+// Prevents use of hardcoded strings and improves type safety
+enum AgeUnit {
+  Years = "years",
+  Months = "months",
+}
+
+// Function type definition for greeting
+// Takes a greeting string and returns a formatted string
+type GreetingFunction = (
+  greeting: string /* additional parameters can be added later */
+) => string;
+
+// Person type definition
+type Person = {
+  name: string;              // Person's name
+  age: number;               // Age value (based on ageUnit)
+  ageUnit: AgeUnit;          // Unit of age (Years or Months)
+  country: string;           // Country of residence
+  // greet: Function;        // Avoid using generic Function type (not type-safe)
+  greet: GreetingFunction;   // Strongly typed greeting function
+};
+
+// Creating a Person object
+let person: Person = {
+  name: "Sankar",
+  age: 34,
+  ageUnit: AgeUnit.Years,
+  country: "India",
+
+  // Implementation of greet function
+  // Returns greeting message with person's name
+  greet: (greeting) => {
+    // Note: This uses the outer 'person' reference.
+    // In larger systems, prefer using parameters or 'this' carefully.
+    return `${greeting} ${person.name}`;
+  },
+};
+
+/**
+ * Converts age to months if it is currently in years.
+ * 
+ * Behavior:
+ * - If ageUnit is Years → converts age to Months
+ * - If already Months → no change
+ * 
+ * Note:
+ * This function mutates the original object.
+ * In enterprise applications, consider returning a new object (immutability).
+ */
+function convertAgeToMonths(person: Person): Person {
+  // Check if age is in Years
+  if (person.ageUnit === AgeUnit.Years) {
+    // Convert years to months
+    person.age = person.age * 12;
+
+    // Update the age unit
+    person.ageUnit = AgeUnit.Months;
+  }
+
+  // Return the updated person object
+  return person;
+}
+
+// Convert age and print the updated object
+console.log(convertAgeToMonths(person));
+
+// Call greet function and print greeting message
+console.log(person.greet("Hello"));
+
+// -------------------Anonymous Function -------
+
+// Array of student names
+// TypeScript infers the type automatically as: string[]
+const students = ["Alice", "Bob", "Mark"];
+
+// Loop through the students array using map()
+// Since 'students' is of type string[],
+// TypeScript automatically infers the type of 'student' as string (Anonymous fn)
+students.map((student) => {
+  // 'student' is inferred as type: string
+  console.log(student);
+});
+
+// The same type inference works when using a function expression
+// (function keyword) instead of an arrow function (named Anonymous fn)
+students.map(function (student) {
+  // Here also, TypeScript infers 'student' as string
+  // No need to explicitly write (student: string)
+  console.log(student);
+});
