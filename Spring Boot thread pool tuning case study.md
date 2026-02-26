@@ -245,3 +245,14 @@ Not about increasing numbers blindly.
 
 -------------
 
+| Type         | Thread Count | Queue         | Best For          | Risk             |
+| ------------ | ------------ | ------------- | ----------------- | ---------------- |
+| Fixed        | Fixed        | Unbounded     | CPU tasks         | OOM              |
+| Cached       | Dynamic      | None          | Short async tasks | Thread explosion |
+| Single       | 1            | Unbounded     | Ordered tasks     | Bottleneck       |
+| Scheduled    | Fixed        | Delay queue   | Periodic jobs     | Misfire risk     |
+| WorkStealing | CPU cores    | Work-stealing | Parallel compute  | Complex          |
+| Custom       | Configurable | Configurable  | Production        | Needs tuning     |
+
+------------------
+
