@@ -1,6 +1,16 @@
+/*
+Behavior
+
+Multiple readers allowed
+
+Writer blocks all readers
+
+Reentrant (same thread can acquire again)
+
+*/
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-class PriceService {
+class PriceServiceReentrantReadWriteLock {
 
     private final ReentrantReadWriteLock lock =
             new ReentrantReadWriteLock();
