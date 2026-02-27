@@ -1,3 +1,17 @@
+
+/*
+
+// StampedLock introduces a new concept: optimistic read.
+
+Flow:
+
+Read without blocking
+
+Check if write occurred
+
+If yes → fallback to real read lock
+*/
+    
 import java.util.concurrent.locks.StampedLock;
 
 class PriceServiceStampedLock {
