@@ -1,4 +1,5 @@
 // inventory service using ReentrantLock
+// (same thread can acquire again)
 
 import java.util.concurrent.locks.ReentrantLock;
 
