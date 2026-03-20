@@ -1,7 +1,10 @@
 package org.example.tricky;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 interface A {
 
@@ -49,6 +52,17 @@ class Test {
     }
 }
 
+class TestTest {
+
+    void print(Integer i) {
+        System.out.println("Integer method overloading");
+    }
+    void print(String s) {
+        System.out.println("String method overloading");
+    }
+
+}
+
 class MethodOverloadingTest {
 
     static void print(int x) {
@@ -88,6 +102,14 @@ class Child extends Parent {
 
 public class TrickyTest {
 
+    public static void change(int arr[]) {
+        arr[0] = 10;
+    }
+
+    static int sCount = 0;
+    static volatile int vCount = 0;
+
+
     public static int test() {
         try {
             throw new RuntimeException();
@@ -120,7 +142,7 @@ public class TrickyTest {
         x = 20;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
 
         System.out.println("=============String================");
 
@@ -169,6 +191,33 @@ public class TrickyTest {
         String s22 = "Java";
 
         System.out.println(s12 == s22);
+
+        System.out.println("============StringBuilder=================");
+        // StringBuilder creates heap string, not pooled.
+        String s2111 = new StringBuilder()
+                .append("Ja")
+                .append("va")
+                .toString();
+
+        System.out.println(s2111 == s22);
+
+        System.out.println("============String Final=================");
+        String s71 = "Java";
+        String s72 = "Developer";
+
+        String s73 = s71 + s72;
+        String s74 = "JavaDeveloper";
+
+        System.out.println(s73 == s74);
+
+        // Because final variables allow compile-time constant folding.
+        final String s81 = "Java";
+        final String s82 = "Developer";
+
+        String s83 = s81 + s82;
+        String s84 = "JavaDeveloper";
+
+        System.out.println(s83 == s84);
 
         System.out.println("============\"Ja\" + \"va\".intern=================");
 
@@ -578,11 +627,432 @@ public class TrickyTest {
         aObj.printDefaultMEthod();
         aObj.printMethod();
 
+
+        System.out.println("==========When does a static block execute===============");
+        /*
+        The static block executes when the class is initialized by the JVM.
+
+            This happens when the class is first actively used.
+
+            Examples of triggers:
+
+                Creating an object
+
+                Accessing a static variable
+
+                Calling a static method
+
+                Using Class.forName()
+         */
+
+        // Class.forName("Test"); // Static block
+
+        /*
+              Reason
+
+                Class.forName() does two things:
+
+                    Loads the class
+
+                    Initializes the class
+
+                    Initialization triggers execution of static blocks.
+
+                Execution flow:
+
+                        Load class
+                        ↓
+                        Initialize class
+                        ↓
+                        Run static blocks
+         */
+
+
+        // ClassLoader.getSystemClassLoader().loadClass("Test"); // No output
+
+        System.out.println("==========Thread===============");
+
+        Thread t = new Thread();
+        t.start();
+       // t.start(); RunTimeException illegalThreadstateException
+
+        /*
+
+        Reason
+
+                A thread can be started only once.
+
+                Thread lifecycle:
+
+                NEW → RUNNABLE → RUNNING -> Waiting / TimedWaiting → TERMINATED
+
+                After a thread starts, calling start() again is illegal.
+         */
+
+        vCount++; // Is this thread-safe? // No
+
+        // count++ is not an atomic operation.
+
+        /*
+
+        It actually performs three steps:
+
+            1. read count
+            2. increment
+            3. write count
+
+            Example problem:
+
+            Thread 1 reads count = 5
+            Thread 2 reads count = 5
+            Thread 1 writes 6
+            Thread 2 writes 6
+
+            Result → lost update
+
+            volatile ensures:
+
+                Feature	        Provided
+                Visibility	        ✔
+                Atomicity	        ❌
+
+             So all threads see the latest value, but operations like ++ are still unsafe.
+
+
+         */
+
+
+        AtomicInteger count = new AtomicInteger(0);
+        count.incrementAndGet();
+
+        //synchronized(this) {
+        //    count++;
+        //}
+
+        // Since the exception is caught, the program continues normally.
+        try {
+            int x1 = 10/0;  // throws ArithmeticException
+        } catch(Exception e) {   // → handles it
+        } finally {
+            System.out.println("Finally");
+        }
+
+        // RuntimeException
+
+        int age = 15;
+        //if(age >= 18) {
+        //    throw new RuntimeException("Not allowed");
+        //}
+
+
+        char cc = 'A'; // char internally stores Unicode numeric values. 65
+        cc++; // 65 + 1
+
+        System.out.println(cc); // 66 = B
+
+        // In Java, arithmetic operations on byte, short, or char automatically promote to int.
+        // byte / short / char → promoted to int
+        byte by = 10;
+       //  by = by + 1;   // Compilation Error possible lossy conversion from int to byte
+
+        by = (byte)(by + 1); // (byte) int
+        System.out.println(by);
+
+        by += 1;
+        System.out.println(by); // Compound assignment operators perform implicit casting.
+
+        // reference to print is ambiguous
+
+        TestTest tt = new TestTest();
+        //  tt.print(null); // Compilation Error reference to print is ambiguous
+        tt.print((Integer) null);
+
+
+        System.out.println("********Array Covariance Trap********");
+
+        Object[] arrCoVarient = new String[3];
+        arrCoVarient[0] = "Hello";
+       // arrCoVarient[1] = 10; // ArrayStoreException Runtime type of array = String[].
+
+
+        System.out.println("********StringBuilder********");
+        StringBuilder sb = new StringBuilder("Java");
+        System.out.println(sb.equals("Java")); // false
+        System.out.println(sb.toString().equals("Java")); // true
+
+        /*
+
+        StringBuilder does not override equals().
+
+                So it inherits the default implementation from Object.
+
+                Default Object.equals() behaves like:
+
+            reference comparison
+
+            Equivalent to:
+
+                s1 == s2
+        */
+
+
+        List<Integer> list = Arrays.asList(1,2,3);
+       // list.add(4);// Result UnsupportedOperationException
+        list.set(1, 4);
+
+
+        /*
+
+                J6 substring() did NOT create a new char array.
+
+                Instead, it shared the same underlying char[].
+
+                Internal representation (simplified)
+                class String {
+                    char[] value;
+                    int offset;
+                    int count;
+                }
+
+                So:
+
+                "HelloWorld"
+                   ↓
+                [H e l l o W o r l d]
+
+                sub = s.substring(0,5):
+
+                sub → same char[] with offset=0, count=5
+
+                String safe = new String(sub);
+         */
+
+        /*
+
+                From Java 7 onwards:
+
+                substring() creates a NEW char[]
+
+                So:
+
+                String sub = s.substring(0,5);
+
+                Now:
+
+                sub → new char[] = [H e l l o]
+
+                Original string → separate char[]
+                Substring → new char[]
+
+                No memory retention issue.
+
+                Java 6
+                [H e l l o W o r l d]
+                 ↑───────────────↑
+                   shared by both
+
+                Java 7+
+                Original → [H e l l o W o r l d]
+                Substring → [H e l l o]
+
+         */
+        String sH = "HelloWorld";
+        String sub = sH.substring(0, 5);
+        System.out.println(sub);
+
+        /*
+
+                Even though small is just "Hello":
+
+                small still references the FULL 10MB char[]
+
+                So:
+
+                    10MB memory is retained unnecessarily
+
+                This caused hidden memory leaks.
+         */
+
+        String big = new String(new char[10_000_000]);
+        String small = big.substring(0, 5);
+        System.out.println(small);
+
+
+        /*
+            String in Java is immutable.
+
+            That means:
+
+            Once a String is created, it cannot be changed.
+
+            String Pool / Heap
+            ----------------------
+            "Java"   ← s
+            "Lava"   (unused, eligible for GC)
+
+            String is immutable → all modification methods return new objects.
+
+
+         */
+        String s11a = "Java";
+        s11a.replace("J", "L");
+        System.out.println(s11a);
+
+        System.out.println(Double.NaN == Double.NaN);  // false IEEE floating-point rule: NaN != NaN
+
+        Double xd = 11.25;
+        System.out.println(Double.isNaN(xd));
+
+
+        System.out.println(1.0 / 0);   // Infinity
+        System.out.println(-1.0 / 0);  // -Infinity
+        System.out.println(0.0 / 0);   // NaN
+
+        double xqa = 1 / 0;
+        System.out.println(xqa/0); // 1 / 0 → integer division happens first Exception in thread "main" java.lang.ArithmeticException: / by zero
+        System.out.println(1/0); // Exception in thread "main" java.lang.ArithmeticException: / by zero
+
+        // Integer division → strict → exception
+        // Floating-point → IEEE rules → Infinity / NaN
+
+        Test t11 = new Test();
+        Test t21 = t11;
+        t11 = null; // not eligible // Because t2 still references it.
+
+
+        byte[] arrBy = new byte[100_000_000]; // This allocates ~100 MB array.
+
+        // Does It Go to Young or Old Generation?
+
+        // Does It Go to Young or Old Generation?
+
+        /*
+
+            1. Classic Generational GC (Parallel / CMS)
+
+            Normally:
+
+                New objects → Young Generation (Eden)
+
+            But for large objects:
+
+            They may be allocated directly in Old Generation
+
+            This is controlled by:
+
+                -XX:PretenureSizeThreshold
+
+            Example:
+
+                -XX:PretenureSizeThreshold=10m
+
+            Objects larger than 10MB go directly to Old Gen.
+
+
+            2. G1 GC (Modern JVM Default)
+
+                G1 works differently.
+
+                Heap is divided into regions.
+
+                Large objects are called:
+
+                    Humongous Objects
+
+            G1 Rule
+
+                Object > 50% of region size → Humongous
+
+            Example:
+
+                If region = 2MB:
+
+                >1MB → Humongous object
+
+            Your array (100MB):
+
+                Definitely humongous
+
+            Where It Goes
+
+                Allocated directly in Old Generation regions
+
+            (No Young Gen)
+
+            Heap
+            --------------------------------
+            Young Gen (Eden) → skipped
+
+            Old Gen (Regions)
+            --------------------------------
+            [Humongous object → byte[100MB]]
+
+            Why JVM Does This
+
+            To avoid:
+
+                     Expensive copying during GC (Young → Old)
+
+                     Large objects are costly to move.
+
+            So JVM places them directly in Old Gen.
+
+            ---------
+
+            Small objects → Young Gen
+            Large objects → may go directly to Old Gen
+
+            ---------
+
+            Potential Problem
+
+            Frequent large allocations can cause:
+
+            GC pressure
+            Fragmentation
+            Full GC pauses
+
+            ---------
+
+            // Class Identity = ClassLoader + Fully Qualified Class Name
+
+            ClassLoader loader1 = new Test1();
+            ClassLoader loader2 = new Test1();
+
+            Class<?> c1 = loader1.loadClass("com.example.Test");
+            Class<?> c2 = loader2.loadClass("com.example.Test");
+
+            System.out.println(c1 == c2);
+
+            -----------
+
+            Object obj = loader1.loadClass("Test").newInstance();
+            System.out.println(obj instanceof Test);
+
+            Test loaded by:
+
+                AppClassLoader
+
+            But object created using:
+
+                CustomClassLoader
+
+            Different class identity → instanceof fails.
+
+            ---------
+
+            Same class name + same bytecode ≠ same class
+
+            Same class = same ClassLoader + same ClassName
+
+
+
+         */
+
+
     }
 
-    public static void change(int arr[]) {
-        arr[0] = 10;
-    }
+
 
 }
 
